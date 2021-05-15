@@ -1,0 +1,2 @@
+include ':app'
+rootProject.name = "Taller_2_Davila_Burgos"
