@@ -22,6 +22,7 @@ public class StartActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent logIn = new Intent(v.getContext(), LogInActivity.class);
                 startActivity(logIn);
+
             }
         });
 

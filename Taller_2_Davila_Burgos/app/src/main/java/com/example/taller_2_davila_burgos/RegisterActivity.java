@@ -77,7 +77,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private static final int REQUEST_LOCATION = 410;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    String [] location_permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
+    String[] location_permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
     private double userLat;
     private double userLong;
 
@@ -90,14 +90,14 @@ public class RegisterActivity extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance();
         mStorageRef = FirebaseStorage.getInstance().getReference();
 
-        Button botonRegistar = (Button)findViewById(R.id.buttonRegistro);
-        Button botonFoto = (Button)findViewById(R.id.buttonFoto);
+        Button botonRegistar = (Button) findViewById(R.id.buttonRegistro);
+        Button botonFoto = (Button) findViewById(R.id.buttonFoto);
 
-        mName = (EditText)findViewById(R.id.editTextNombre);
-        mLastName = (EditText)findViewById(R.id.editTextApellido);
-        mEmail = (EditText)findViewById(R.id.editTextCorreoReg);
-        mPassword = (EditText)findViewById(R.id.editTextPasswordReg);
-        mDocument = (EditText)findViewById(R.id.editTextDocument);
+        mName = (EditText) findViewById(R.id.editTextNombre);
+        mLastName = (EditText) findViewById(R.id.editTextApellido);
+        mEmail = (EditText) findViewById(R.id.editTextCorreoReg);
+        mPassword = (EditText) findViewById(R.id.editTextPasswordReg);
+        mDocument = (EditText) findViewById(R.id.editTextDocument);
         mImageView = (ImageView) findViewById(R.id.imagenFotoPerfil);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -107,7 +107,7 @@ public class RegisterActivity extends AppCompatActivity {
         botonRegistar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(validateForm()){
+                if (validateForm()) {
                     signInUser(mEmail.getText().toString(), mPassword.getText().toString());
                 }
             }
@@ -116,20 +116,20 @@ public class RegisterActivity extends AppCompatActivity {
         botonFoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(ContextCompat.checkSelfPermission(RegisterActivity.this,
-                        Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
-                    Intent pickImage = new Intent (Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                if (ContextCompat.checkSelfPermission(RegisterActivity.this,
+                        Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                    Intent pickImage = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                     pickImage.setType("image/*");
                     startActivityForResult(pickImage, IMAGE_PICKER_REQUEST);
-                }else{
+                } else {
                     requestStoragePermission();
                 }
             }
         });
     }
 
-    private void requestStoragePermission(){
-        if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)){
+    private void requestStoragePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             new AlertDialog.Builder(this)
                     .setTitle("Permiso requerido")
                     .setMessage("Este permiso es requerido para el acceso a su galería")
@@ -149,18 +149,18 @@ public class RegisterActivity extends AppCompatActivity {
                         }
                     })
                     .create().show();
-        }else{
+        } else {
             ActivityCompat.requestPermissions(
                     this, new String[]{
                             Manifest.permission.READ_EXTERNAL_STORAGE
-                    }, STORAGE_PERMISSION_CODE );
+                    }, STORAGE_PERMISSION_CODE);
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permisssions, @NonNull int [] grantResults){
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permisssions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permisssions, grantResults);
-        switch(requestCode) {
+        switch (requestCode) {
             case 1:
                 if (requestCode == STORAGE_PERMISSION_CODE) {
                     if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -172,6 +172,16 @@ public class RegisterActivity extends AppCompatActivity {
             case REQUEST_LOCATION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "Location permissions granted", Toast.LENGTH_SHORT).show();
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
                     fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
@@ -304,9 +314,9 @@ public class RegisterActivity extends AppCompatActivity {
                 mRef = mDatabase.getReference(PATH_USERS + currentUser.getUid());
                 mRef.setValue(usuario);
             }
-            Intent intent = new Intent (getBaseContext(), HomeActivity.class);
+            Intent intent = new Intent (getBaseContext(), PuntosMapaActivity.class);
             Toast.makeText(getBaseContext(), "Registro exitoso", Toast.LENGTH_SHORT).show();
-            intent.putExtra("user", currentUser.getEmail());
+
             loadUsersSuscription();
             startActivity(intent);
         }else{

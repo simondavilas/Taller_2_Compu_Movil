@@ -58,7 +58,7 @@ public class LogInActivity extends AppCompatActivity {
 
     private void updateUI(FirebaseUser currentUser){
         if(currentUser != null){
-            Intent iniciarS = new Intent (getBaseContext(), HomeActivity.class);
+            Intent iniciarS = new Intent (getBaseContext(), PuntosMapaActivity.class);
             iniciarS.putExtra("user", currentUser.getEmail());
             startActivity(iniciarS);
         }else{
