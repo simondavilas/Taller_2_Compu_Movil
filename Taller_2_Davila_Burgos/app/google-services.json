@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1074837251137",
+    "firebase_url": "https://taller-2-davila-burgos-default-rtdb.firebaseio.com",
+    "project_id": "taller-2-davila-burgos",
+    "storage_bucket": "taller-2-davila-burgos.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074837251137:android:dc8ad0611c12bba9cbd2c0",
+        "android_client_info": {
+          "package_name": "com.example.taller_2_davila_burgos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1074837251137-30qf3rpoehmel2cnr90kbci67f8kak5s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsrxCFHnqPwYJDbBxDx218I2OBDtqrbCg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1074837251137-30qf3rpoehmel2cnr90kbci67f8kak5s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

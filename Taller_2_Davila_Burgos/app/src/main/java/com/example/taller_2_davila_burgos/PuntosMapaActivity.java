@@ -1,6 +1,8 @@
 package com.example.taller_2_davila_burgos;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -12,6 +14,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -33,7 +37,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class PuntosMapaActivity extends FragmentActivity implements OnMapReadyCallback {
+public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final int REQUEST_LOCATION = 410;
     private GoogleMap mMap;
     private Bundle datos;
@@ -54,9 +58,13 @@ public class PuntosMapaActivity extends FragmentActivity implements OnMapReadyCa
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        System.out.println("on init");
+
         getLocation();
     }
+
+
+
+
 
     /**
      * Manipulates the map once available.
@@ -124,6 +132,14 @@ public class PuntosMapaActivity extends FragmentActivity implements OnMapReadyCa
                 return;
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_map,menu);
+        return true;
+    }
+
     public void getLocation(){
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
