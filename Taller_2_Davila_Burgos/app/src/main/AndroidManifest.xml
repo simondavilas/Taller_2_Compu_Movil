@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -30,11 +31,15 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyB4j7x58JKbfUb1nFLrLZ3LoFnMQEJn2uk" />
+            android:value="@string/google_maps_key" />
 
         <activity
+            android:name=".UserMapsActivity"
+            android:label="@string/title_activity_user_maps"></activity>
+        <activity android:name=".UsersListActivity" />
+        <activity
             android:name=".PuntosMapaActivity"
-            android:label="@string/title_activity_puntos_mapa"></activity>
+            android:label="@string/title_activity_puntos_mapa" />
         <activity android:name=".StartActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -54,6 +59,10 @@
         <activity
             android:name=".MainActivity"
             android:label="Main" />
+
+        <service android:name=".LocationService"
+            android:enabled="true"
+            android:exported="false"/>
     </application>
 
 </manifest>

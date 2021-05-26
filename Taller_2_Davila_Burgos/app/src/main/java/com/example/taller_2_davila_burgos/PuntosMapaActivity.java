@@ -8,14 +8,18 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -24,11 +28,16 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,6 +49,9 @@ import java.io.InputStream;
 public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final int REQUEST_LOCATION = 410;
     private GoogleMap mMap;
+
+    private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
     private Bundle datos;
     double Longitudes[];
     double latitudes[];
@@ -48,6 +60,7 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
     String[] location_permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
     private double userLat;
     private double userLong;
+
     private FusedLocationProviderClient fusedLocationProviderClient;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +71,24 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference("users").child(mAuth.getUid());
+        ValueEventListener postListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                boolean dispo = snapshot.child("disponible").getValue(Boolean.class);
+                Log.d("USPRUEBA", String.valueOf(dispo));
+                if (dispo == true) {
+                    Toast.makeText(getBaseContext(), "Disponibilidad activada", Toast.LENGTH_SHORT).show();
+                    startLocationService();
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
 
+            }
+        };
+        mDatabase.addListenerForSingleValueEvent(postListener);
         getLocation();
     }
 
@@ -140,6 +170,68 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int itemClicked = item.getItemId();
+        if(itemClicked == R.id.menuEstablecerDisponible){
+            mAuth = FirebaseAuth.getInstance();
+            mDatabase = FirebaseDatabase.getInstance().getReference("users").child(mAuth.getUid());
+            ValueEventListener postListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    boolean dispo = snapshot.child("disponible").getValue(Boolean.class);
+                    Log.d("USPRUEBA", String.valueOf(dispo));
+                    if (dispo == true) {
+                        Toast.makeText(getBaseContext(), "Disponibilidad desactivada", Toast.LENGTH_SHORT).show();
+                        stopLocationService();
+                        mDatabase.child("disponible").setValue(false);
+                    } else {
+                        Toast.makeText(getBaseContext(), "Disponibilidad activada", Toast.LENGTH_SHORT).show();
+                        startLocationService();
+                        mDatabase.child("disponible").setValue(true);
+
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            };
+            mDatabase.addListenerForSingleValueEvent(postListener);
+
+            //Change state in DataBase
+        }else if(itemClicked == R.id.menuUsuariosDisponibles){
+            mAuth = FirebaseAuth.getInstance();
+            mDatabase = FirebaseDatabase.getInstance().getReference("users").child(mAuth.getUid());
+            final boolean[] aux = new boolean[1];
+            ValueEventListener postListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    boolean dispo = snapshot.child("disponible").getValue(Boolean.class);
+                    Log.d("USPRUEBA", String.valueOf(dispo));
+                    if (dispo == true) {
+                        Intent userList = new Intent(getApplicationContext(), UsersListActivity.class);
+                        startActivity(userList);
+                    } else {
+                        Toast.makeText(getBaseContext(), "Para ver a otros usuarios debe establecerse como disponible", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            };
+            mDatabase.addListenerForSingleValueEvent(postListener);
+
+        }else if (itemClicked == R.id.menuCerrarSesion){
+            stopLocationService();
+            FirebaseAuth.getInstance().signOut();
+            Intent start = new Intent(this, StartActivity.class);
+            startActivity(start);
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     public void getLocation(){
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
@@ -151,7 +243,8 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
                         userLat = location.getLatitude();
                         userLong = location.getLongitude();
                         LatLng ubiActual = new LatLng(userLat, userLong);
-                        mMap.addMarker(new MarkerOptions().position(ubiActual).title("Ubiactual"));
+                        mMap.addMarker(new MarkerOptions().position(ubiActual).title("Ubicación Actual")
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                     }else{
                         Log.i("Location", "Location is null");
                         //Active location
@@ -217,6 +310,39 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
             e.printStackTrace();
         }
         return json;
+    }
+
+    private boolean isLocationServiceRunning(){
+        ActivityManager activityManager =
+                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if(activityManager != null){
+            for(ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)){
+                if(LocationService.class.getName().equals(service.service.getClassName())){
+                    if(service.foreground)
+                        return true;
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
+    private void startLocationService(){
+        if(!isLocationServiceRunning()){
+            Intent intent = new Intent(getApplicationContext(), LocationService.class);
+            intent.setAction(Constants.ACTION_START_LOCATION_SERVICE);
+            startService(intent);
+            Toast.makeText(this, "Location service stated", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void stopLocationService(){
+        if(isLocationServiceRunning()){
+            Intent intent = new Intent(getApplicationContext(), LocationService.class);
+            intent.setAction(Constants.ACTION_STOP_LOCATION_SERVICE);
+            startService(intent);
+            Toast.makeText(this, "Location service stopped", Toast.LENGTH_SHORT).show();
+        }
     }
 
 }

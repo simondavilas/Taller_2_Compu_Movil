@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-<item
-    android:id="@+id/cerrarSesion"
-    android:title="Cerrar Sesion"
-    />
+
     <item
-        android:id="@+id/establecerDisponible"
+        android:id="@+id/menuEstablecerDisponible"
         android:title="Establecer Disponible"
+        />
+    <item
+        android:id="@+id/menuUsuariosDisponibles"
+        android:title="Usuarios Disponibles"
+        />
+    <item
+        android:id="@+id/menuCerrarSesion"
+        android:title="Cerrar Sesion"
         />
 </menu>

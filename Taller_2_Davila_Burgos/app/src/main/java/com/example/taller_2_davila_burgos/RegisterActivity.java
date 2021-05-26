@@ -310,8 +310,10 @@ public class RegisterActivity extends AppCompatActivity {
                 usuario.setDocument(Long.parseLong(mDocument.getText().toString()));
                 usuario.setLatitude(userLat);
                 usuario.setLongitude(userLong);
+                usuario.setDisponible(false);
 
                 mRef = mDatabase.getReference(PATH_USERS + currentUser.getUid());
+
                 mRef.setValue(usuario);
             }
             Intent intent = new Intent (getBaseContext(), PuntosMapaActivity.class);

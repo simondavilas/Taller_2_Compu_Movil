@@ -9,8 +9,9 @@ public class Usuario {
     Long document;
     double latitude;
     double longitude;
+    boolean disponible;
 
-    public Usuario(String uid, String name, String lastName, String email, String password, Long document, double latitude, double longitude){
+    public Usuario(String uid, String name, String lastName, String email, String password, Long document, double latitude, double longitude, boolean disponible){
         this.uid = uid;
         this.name = name;
         this.lastName = lastName;
@@ -19,6 +20,7 @@ public class Usuario {
         this.document = document;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.disponible = disponible;
     }
     public Usuario(){
 
@@ -86,5 +88,13 @@ public class Usuario {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public boolean getDisponible() {
+        return disponible;
+    }
+
+    public void setDisponible(boolean disponible) {
+        this.disponible = disponible;
     }
 }

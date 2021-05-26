@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Taller_2_Davila_Burgos</string>
     <string name="title_activity_puntos_mapa">Map</string>
+    <string name="title_activity_user_maps">Map</string>
 </resources>
