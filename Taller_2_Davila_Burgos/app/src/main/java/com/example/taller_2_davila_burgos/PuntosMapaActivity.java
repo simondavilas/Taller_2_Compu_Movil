@@ -58,12 +58,8 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
     private static final int REQUEST_LOCATION = 410;
     private GoogleMap mMap;
 
-    private static final int NOTIFICATION_CODE = 200;
     private static final String NOTIFICATION_CHANNEL = "NOTIFICATION";
-    private boolean initialState = true;
-
-
-
+    private boolean estadoInicial = true;
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase, mDatabase2;
@@ -96,7 +92,6 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 boolean dispo = snapshot.child("disponible").getValue(Boolean.class);
-                Log.d("USPRUEBA", String.valueOf(dispo));
                 if (dispo == true) {
                     Toast.makeText(getBaseContext(), "Disponibilidad activada", Toast.LENGTH_SHORT).show();
                     startLocationService();
@@ -114,25 +109,21 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // Save initial state of DB
-                if (initialState) {
-                    initialState = false;
+                if (estadoInicial) {
+                    estadoInicial = false;
                     for (DataSnapshot singleUser : snapshot.getChildren()) {
                         Usuario user = singleUser.getValue( Usuario.class );
                         usuarios.add(user);
                     }
-                    Log.i("STATE_I", "Entered to initialize the users in the database");
                     return;
                 }
-                Log.i("ENTRO", "ENTRE AL PRIMER IF");
-                // Create notification if changed user is available now
-                short shouldStartLocationActivity = shouldCreateNotification(snapshot);
-                Log.i("STATE:", "INDEX ... " + String.valueOf(shouldStartLocationActivity));
-                Log.i("ENTRO2", "ENTRO DESPUES");
-                if (shouldStartLocationActivity != -1) {
+
+                short startLocationActivity = updateCreateNotification(snapshot);
+                if (startLocationActivity != -1) {
                     Log.i("ENTRO3", "ENTRE AL PRIMER IF");
                     Log.i("STATE", "USER CHANGED ITS STATUS");
-                    short index = shouldStartLocationActivity;
-                    createNotificaion(index);
+                    short indice = startLocationActivity;
+                    createNotification(indice);
                 }
             }
 
@@ -145,15 +136,18 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
         getLocation();
     }
 
-    private void createNotificaion(int index) {
+    private void createNotification(int index) {
 
         // Create an explicit intent for an Activity in your app
-        Intent showUserLocation = new Intent(this, UserMapsActivity.class);
+        Intent userMaps = new Intent(this, UserMapsActivity.class);
         Log.d("USPRUEBA", usuarios.get(index).uid);
-        showUserLocation.putExtra("otherUID", usuarios.get(index).uid);
-        showUserLocation.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, showUserLocation, PendingIntent.FLAG_UPDATE_CURRENT);
+        userMaps.putExtra("otherUID", usuarios.get(index).uid);
+        userMaps.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, userMaps, PendingIntent.FLAG_UPDATE_CURRENT);
+
         String notificationMessage = usuarios.get(index).getName() + " ahora se encuentra disponible";
+
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(),NOTIFICATION_CHANNEL);
         notificationBuilder.setSmallIcon(R.drawable.common_google_signin_btn_icon_dark);
         notificationBuilder.setContentTitle("NOTIFICACION DE USUARIO");
@@ -169,56 +163,51 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
 
     }
     private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "NOTIFICATION";
             String description = "NOTIFICATION";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL, name, importance);
             channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
+
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
     }
 
-    private short shouldCreateNotification(DataSnapshot snapshot) {
+    private short updateCreateNotification(DataSnapshot snapshot) {
         short changedUser = -1;
         ArrayList<Usuario> changedUsers = new ArrayList<Usuario>();
 
-        // Fill changed users array
         for (DataSnapshot singleUser : snapshot.getChildren()) {
             Usuario user = singleUser.getValue( Usuario.class );
             changedUsers.add( user );
         }
-        // If a new user was registered
+
         if (changedUsers.size() != usuarios.size()) {
-            uploadUsersArray(changedUsers);
+            subirUsuariosArray(changedUsers);
             return (short) ((short) changedUsers.size() - 1);
         }
 
-        // Check for users that have changed its status to available
         for (int i = 0; i < changedUsers.size(); i++) {
-            // User have change its status to available
             if ((!changedUsers.get( i ).disponible == usuarios.get(i).disponible)  && changedUsers.get( i ).disponible == true) {
                 changedUser = (short) i;
             }
         }
 
-        uploadUsersArray(changedUsers);
+        subirUsuariosArray(changedUsers);
 
         return changedUser;
     }
 
-    private void uploadUsersArray(ArrayList<Usuario> newUsersArray) {
-        // If a user registered
+    private void subirUsuariosArray(ArrayList<Usuario> newUsersArray) {
+
         if (newUsersArray.size() != usuarios.size()) {
             usuarios.add(newUsersArray.get( newUsersArray.size() - 1 ));
             return;
         }
-        // If a user state changed
+
         for (int i = 0; i < newUsersArray.size(); i++) {
             usuarios.get(i).disponible = newUsersArray.get(i).disponible;
         }
