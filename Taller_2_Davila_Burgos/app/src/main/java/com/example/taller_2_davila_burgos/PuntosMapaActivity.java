@@ -149,13 +149,10 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
 
         // Create an explicit intent for an Activity in your app
         Intent showUserLocation = new Intent(this, UserMapsActivity.class);
-        showUserLocation.putExtra("nombre", usuarios.get(index).name);
-        showUserLocation.putExtra("availableUserLat", usuarios.get(index).longitude);
-        showUserLocation.putExtra("availableUserLong", usuarios.get(index).longitude);
-
+        Log.d("USPRUEBA", usuarios.get(index).uid);
+        showUserLocation.putExtra("otherUID", usuarios.get(index).uid);
         showUserLocation.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, showUserLocation, 0);
-
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, showUserLocation, PendingIntent.FLAG_UPDATE_CURRENT);
         String notificationMessage = usuarios.get(index).getName() + " ahora se encuentra disponible";
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(),NOTIFICATION_CHANNEL);
         notificationBuilder.setSmallIcon(R.drawable.common_google_signin_btn_icon_dark);
@@ -226,10 +223,6 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
             usuarios.get(i).disponible = newUsersArray.get(i).disponible;
         }
     }
-
-
-
-
 
 
     /**

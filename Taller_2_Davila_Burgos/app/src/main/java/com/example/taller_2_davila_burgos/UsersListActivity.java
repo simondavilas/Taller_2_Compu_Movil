@@ -99,10 +99,6 @@ public class UsersListActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     Intent mapa = new Intent(v.getContext(), UserMapsActivity.class);
-                    mapa.putExtra("userLat", String.valueOf(userLat));
-                    mapa.putExtra("userLong", String.valueOf(userLong));
-                    mapa.putExtra("availableUserLat", String.valueOf(Usuarios.get(position).getLatitude()));
-                    mapa.putExtra("availableUserLong", String.valueOf(Usuarios.get(position).getLongitude()));
                     mapa.putExtra("otherUserID", Usuarios.get(position).getUid());
                     mapa.putExtra("nombre", Usuarios.get(position).getName() +" "+ Usuarios.get(position).getLastName());
                     startActivity(mapa);

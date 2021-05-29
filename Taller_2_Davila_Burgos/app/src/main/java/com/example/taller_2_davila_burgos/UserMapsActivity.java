@@ -32,10 +32,6 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
 
-    private String userLat;
-    private String userLong;
-    private String availableUserLat;
-    private String availableUserLong;
     private String userSearchName;
     private LatLng user;
     private LatLng userSearch;
@@ -58,22 +54,17 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
 
         markerotherUser = null;
         myMarker = null;
-
+        Bundle extras = getIntent().getExtras();
         otherUserId = getIntent().getExtras().getString("otherUserID");
-        userLat = getIntent().getExtras().getString("userLat");
-        userLong = getIntent().getExtras().getString("userLong");
-
-        availableUserLat = getIntent().getExtras().getString("availableUserLat");
-        availableUserLong = getIntent().getExtras().getString("availableUserLong");
+        if(otherUserId == null) {
+            otherUserId = extras.getString("otherUID");
+            Log.d("USPRUEBA", extras.getString("otherUID"));
+        }
         userSearchName = getIntent().getExtras().getString("nombre");
-        //user = new LatLng(Double.parseDouble(userLat), Double.parseDouble(userLong));
-        //userSearch = new LatLng(Double.parseDouble(availableUserLat), Double.parseDouble(availableUserLong));
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapUser);
         mapFragment.getMapAsync(this);
-
     }
 
     /**
@@ -93,16 +84,6 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
         mMap.moveCamera(CameraUpdateFactory.zoomTo(11));
         mMap.getUiSettings().setZoomGesturesEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        // Add a marker in Sydney and move the camera
-        //myMarker = mMap.addMarker(new MarkerOptions().position(user).title("Tu ubicación Actual")
-                //.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-
-
-        //mMap.addMarker(new MarkerOptions().position(userSearch).title("Ubicación de "+userSearchName));
-
-
-
-
     }
     private void setMyMarker(){
         mDatabase = FirebaseDatabase.getInstance().getReference("users").child(mAuth.getUid());
@@ -112,16 +93,13 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
                 lat = snapshot.child("latitude").getValue(Double.class);
                 lon  = snapshot.child("longitude").getValue(Double.class);
                 user = new LatLng(lat,lon);
-                Log.d("USPRUEBA", mAuth.getUid() +", latitude:"+lat+", longitude"+lon);
+                Log.d("USPRUEBA", "My "+mAuth.getUid() +", latitude:"+lat+", longitude"+lon);
                 if(myMarker != null){
                     myMarker.remove();
                 }
                 myMarker = mMap.addMarker(new MarkerOptions().position(user).title("Tu ubicación Actual")
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-
-
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
@@ -135,8 +113,9 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 lat2 = snapshot.child("latitude").getValue(Double.class);
                 lon2 = snapshot.child("longitude").getValue(Double.class);
+                userSearchName = snapshot.child("name").getValue(String.class) + " " + snapshot.child("lastName").getValue(String.class);
                 userSearch = new LatLng(lat2,lon2);
-                Log.d("USPRUEBA", otherUserId +", latitude:"+lat2+", longitude"+lon2);
+                Log.d("USPRUEBA", "Other "+otherUserId +", latitude:"+lat2+", longitude"+lon2);
                 if(markerotherUser != null){
                     markerotherUser.remove();
                 }
@@ -145,7 +124,7 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
                 mMap.moveCamera(CameraUpdateFactory.zoomTo(14));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(userSearch));
 
-                Toast.makeText(getBaseContext(), "La distancia entre los dos puntos es de: "+ distancia(lat,lon,lat2,lon2), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getBaseContext(), "La distancia entre los dos puntos es de: "+ distancia(lat,lon,lat2,lon2)+ "Km", Toast.LENGTH_SHORT).show();
 
             }
 
@@ -154,18 +133,6 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
 
             }
         });
-        /*ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        };
-        mDatabase.addListenerForSingleValueEvent(postListener);*/
     }
     public void calcularDistancia(){
 
@@ -178,7 +145,7 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                 * Math.sin(lngDistance / 2) * Math.sin(lngDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double result = 6.371 * c;
+        double result = 6371 * c;
         return Math.round(result*100.0)/100.0;
     }
 }
