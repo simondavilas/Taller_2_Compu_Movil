@@ -4,24 +4,31 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
-
+import com.example.taller_2_davila_burgos.Usuario;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -45,13 +52,21 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final int REQUEST_LOCATION = 410;
     private GoogleMap mMap;
 
+    private static final int NOTIFICATION_CODE = 200;
+    private static final String NOTIFICATION_CHANNEL = "NOTIFICATION";
+    private boolean initialState = true;
+
+
+
+
     private FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
+    private DatabaseReference mDatabase, mDatabase2;
     private Bundle datos;
     double Longitudes[];
     double latitudes[];
@@ -60,7 +75,7 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
     String[] location_permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
     private double userLat;
     private double userLong;
-
+    ArrayList<Usuario> usuarios = new ArrayList<Usuario>();
     private FusedLocationProviderClient fusedLocationProviderClient;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +88,10 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference("users").child(mAuth.getUid());
+        mDatabase2 = FirebaseDatabase.getInstance().getReference("users");
+        createNotificationChannel();
+
+
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -89,8 +108,125 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
             }
         };
         mDatabase.addListenerForSingleValueEvent(postListener);
+
+        // Create listener for location in users ...
+        ValueEventListener usersListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Save initial state of DB
+                if (initialState) {
+                    initialState = false;
+                    for (DataSnapshot singleUser : snapshot.getChildren()) {
+                        Usuario user = singleUser.getValue( Usuario.class );
+                        usuarios.add(user);
+                    }
+                    Log.i("STATE_I", "Entered to initialize the users in the database");
+                    return;
+                }
+                Log.i("ENTRO", "ENTRE AL PRIMER IF");
+                // Create notification if changed user is available now
+                short shouldStartLocationActivity = shouldCreateNotification(snapshot);
+                Log.i("STATE:", "INDEX ... " + String.valueOf(shouldStartLocationActivity));
+                Log.i("ENTRO2", "ENTRO DESPUES");
+                if (shouldStartLocationActivity != -1) {
+                    Log.i("ENTRO3", "ENTRE AL PRIMER IF");
+                    Log.i("STATE", "USER CHANGED ITS STATUS");
+                    short index = shouldStartLocationActivity;
+                    createNotificaion(index);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.i("STATE", "Notification:Error");
+            }
+        };
+        mDatabase2.addValueEventListener(usersListener);
         getLocation();
     }
+
+    private void createNotificaion(int index) {
+
+        // Create an explicit intent for an Activity in your app
+        Intent showUserLocation = new Intent(this, UserMapsActivity.class);
+        showUserLocation.putExtra("nombre", usuarios.get(index).name);
+        showUserLocation.putExtra("availableUserLat", usuarios.get(index).longitude);
+        showUserLocation.putExtra("availableUserLong", usuarios.get(index).longitude);
+
+        showUserLocation.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, showUserLocation, 0);
+
+        String notificationMessage = usuarios.get(index).getName() + " ahora se encuentra disponible";
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(),NOTIFICATION_CHANNEL);
+        notificationBuilder.setSmallIcon(R.drawable.common_google_signin_btn_icon_dark);
+        notificationBuilder.setContentTitle("NOTIFICACION DE USUARIO");
+        notificationBuilder.setColor(Color.BLUE);
+        notificationBuilder.setContentText(notificationMessage);
+        notificationBuilder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        // Set the intent that will fire when the user taps the notification
+        notificationBuilder.setContentIntent(pendingIntent);
+        notificationBuilder.setAutoCancel(true);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+        notificationManager.notify(0,notificationBuilder.build());
+
+    }
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "NOTIFICATION";
+            String description = "NOTIFICATION";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private short shouldCreateNotification(DataSnapshot snapshot) {
+        short changedUser = -1;
+        ArrayList<Usuario> changedUsers = new ArrayList<Usuario>();
+
+        // Fill changed users array
+        for (DataSnapshot singleUser : snapshot.getChildren()) {
+            Usuario user = singleUser.getValue( Usuario.class );
+            changedUsers.add( user );
+        }
+        // If a new user was registered
+        if (changedUsers.size() != usuarios.size()) {
+            uploadUsersArray(changedUsers);
+            return (short) ((short) changedUsers.size() - 1);
+        }
+
+        // Check for users that have changed its status to available
+        for (int i = 0; i < changedUsers.size(); i++) {
+            // User have change its status to available
+            if ((!changedUsers.get( i ).disponible == usuarios.get(i).disponible)  && changedUsers.get( i ).disponible == true) {
+                changedUser = (short) i;
+            }
+        }
+
+        uploadUsersArray(changedUsers);
+
+        return changedUser;
+    }
+
+    private void uploadUsersArray(ArrayList<Usuario> newUsersArray) {
+        // If a user registered
+        if (newUsersArray.size() != usuarios.size()) {
+            usuarios.add(newUsersArray.get( newUsersArray.size() - 1 ));
+            return;
+        }
+        // If a user state changed
+        for (int i = 0; i < newUsersArray.size(); i++) {
+            usuarios.get(i).disponible = newUsersArray.get(i).disponible;
+        }
+    }
+
 
 
 

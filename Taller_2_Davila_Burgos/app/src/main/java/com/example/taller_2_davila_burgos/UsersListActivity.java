@@ -47,6 +47,10 @@ public class UsersListActivity extends AppCompatActivity {
     private double userLat;
     private double userLong;
 
+    private static final int NOTIFICATION_CODE = 200;
+    private static final String NOTIFICATION_CHANNEL = "NOTIFICATION";
+    private boolean initialState = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

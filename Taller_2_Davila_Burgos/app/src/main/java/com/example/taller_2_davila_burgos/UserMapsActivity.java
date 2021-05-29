@@ -57,6 +57,7 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
         otherUserId = getIntent().getExtras().getString("otherUserID");
         userLat = getIntent().getExtras().getString("userLat");
         userLong = getIntent().getExtras().getString("userLong");
+
         availableUserLat = getIntent().getExtras().getString("availableUserLat");
         availableUserLong = getIntent().getExtras().getString("availableUserLong");
         userSearchName = getIntent().getExtras().getString("nombre");
@@ -82,6 +83,9 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
         mMap = googleMap;
         setMyMarker();
         setOhterUserMarker();
+        mMap.moveCamera(CameraUpdateFactory.zoomTo(11));
+        mMap.getUiSettings().setZoomGesturesEnabled(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
         // Add a marker in Sydney and move the camera
         //myMarker = mMap.addMarker(new MarkerOptions().position(user).title("Tu ubicación Actual")
                 //.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
@@ -104,8 +108,7 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
                 }
                 myMarker = mMap.addMarker(new MarkerOptions().position(user).title("Tu ubicación Actual")
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-                mMap.moveCamera(CameraUpdateFactory.zoomTo(14));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(user));
+
             }
 
             @Override
@@ -128,7 +131,8 @@ public class UserMapsActivity extends FragmentActivity implements OnMapReadyCall
                 }
 
                 markerotherUser = mMap.addMarker(new MarkerOptions().position(userSearch).title("Ubicación de "+userSearchName));
-
+                mMap.moveCamera(CameraUpdateFactory.zoomTo(14));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(userSearch));
 
             }
 

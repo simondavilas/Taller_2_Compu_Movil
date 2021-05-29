@@ -52,6 +52,7 @@ import java.io.InputStream;
 
 public class RegisterActivity extends AppCompatActivity {
 
+
     private FirebaseAuth mAuth;
     private FirebaseDatabase mDatabase;
     private DatabaseReference mRef;
