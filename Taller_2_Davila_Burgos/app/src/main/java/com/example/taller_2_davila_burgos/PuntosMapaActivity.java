@@ -280,8 +280,6 @@ public class PuntosMapaActivity extends AppCompatActivity implements OnMapReadyC
                             if (location != null) {
                                 userLat = location.getLatitude();
                                 userLong = location.getLongitude();
-                            } else {
-                                //Active Location
                             }
                         }
                     });
